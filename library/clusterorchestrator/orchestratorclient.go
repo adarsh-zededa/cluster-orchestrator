@@ -13,14 +13,7 @@ func NewClient(orchestratorConfig ops.OrchestratorConfig) (ops.OrchestratorClien
 		if orchestratorConfig.Rancher == nil {
 			return nil, fmt.Errorf("rancher config missing")
 		}
-		rancherClient := &rancher.Client{
-			Server:             orchestratorConfig.Rancher.Server,
-			Port:               orchestratorConfig.Rancher.Port,
-			AuthenticationType: orchestratorConfig.Rancher.AuthenticationType,
-			UserName:           orchestratorConfig.Rancher.UserName,
-			Password:           orchestratorConfig.Rancher.Password,
-			APIToken:           orchestratorConfig.Rancher.APIToken,
-		}
+		rancherClient := rancher.NewRancherClient(orchestratorConfig.Rancher)
 		return rancherClient, nil
 	default:
 		return nil, fmt.Errorf("unrecognized orchestrator type: %d", orchestratorConfig.Type)
