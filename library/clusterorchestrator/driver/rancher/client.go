@@ -57,7 +57,7 @@ func (rc *Client) CreateCluster(clusterName string) (*ops.ClusterConfig, error) 
 	return clusterConfig, nil
 }
 
-func (rc *Client) GetClusterStatus(clusterID string) (*ops.ClusterStatus, error) {
+func (rc *Client) GetClusterStatusByID(clusterID string) (*ops.ClusterStatus, error) {
 	clusterStatusResponse, err := rc.rancherAPIClient.getClusterByID(clusterID)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster by ID failed. %v", err)

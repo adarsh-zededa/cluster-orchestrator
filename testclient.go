@@ -38,7 +38,7 @@ func main() {
 		log.Errorf("exception while verifying creating cluster. %v", err)
 	}
 
-	if _, err := rancherClient.GetClusterStatus("c-khqsn"); err != nil {
+	if _, err := rancherClient.GetClusterStatusByID("c-khqsn"); err != nil {
 		log.Errorf("exception while fetching Rancher Cluster status. %v", err)
 	}
 

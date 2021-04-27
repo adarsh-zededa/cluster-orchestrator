@@ -9,7 +9,7 @@ type OrchestratorClient interface {
 	// CreateCluster creates a cluster with the given name and return ClusterConfig object
 	CreateCluster(clusterName string) (*ClusterConfig, error)
 	// GetClusterStatus reads cluster status by cluster ID and returns ClusterStatus object
-	GetClusterStatus(clusterID string) (*ClusterStatus, error)
+	GetClusterStatusByID(clusterID string) (*ClusterStatus, error)
 	// DeleteCluster removes a cluster by ID from cluster orchestrator
 	DeleteCluster(clusterID string) error
 }
