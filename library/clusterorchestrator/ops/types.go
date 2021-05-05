@@ -18,8 +18,10 @@ type OrchestratorType int32
 const (
 	// ORCHESTRATOR_TYPE_UNSPECIFIED Unspecified orchestrator type
 	ORCHESTRATOR_TYPE_UNSPECIFIED OrchestratorType = 0
-	// ORCHESTRATOR_TYPE_RANCHER racher as cluster orchestratpr
+	// ORCHESTRATOR_TYPE_RANCHER rancher as cluster orchestrator
 	ORCHESTRATOR_TYPE_RANCHER OrchestratorType = 1
+	// ORCHESTRATOR_TYPE_DUMMY dummy as cluster orchestrator
+	ORCHESTRATOR_TYPE_DUMMY OrchestratorType = 2
 )
 
 // NodeRole cluster node role
@@ -44,18 +46,47 @@ const (
 	STATE_INIT State = 1
 	// STATE_ONLINE online state
 	STATE_ONLINE State = 2
+	// STATE_WARNING error/offline state
+	STATE_WARNING State = 3
 	// STATE_ERROR error/offline state
-	STATE_ERROR State = 3
+	STATE_ERROR State = 4
 )
+
+var State_name = map[State]string{
+	0: "UNSPECIFIED",
+	1: "INIT",
+	2: "ONLINE",
+	3: "WARNING",
+	4: "ERROR",
+}
+
+var State_value = map[string]State{
+	"UNSPECIFIED": 0,
+	"INIT":        1,
+	"ONLINE":      2,
+	"WARNING":     3,
+	"ERROR":       4,
+}
 
 // OrchestratorConfig holds the config to contact cluster orchestrator
 type OrchestratorConfig struct {
 	Type    OrchestratorType
 	Rancher *RancherOrchestratorConfig // holds rancher config
+	Dummy   *DummyOrchestratorConfig
 }
 
 // RancherOrchestratorConfig holds the config to contact rancher server
 type RancherOrchestratorConfig struct {
+	Server             string             // address of the cluster orchestration server
+	Port               string             // to contact on cluster orchestration server
+	AuthenticationType AuthenticationType // denotes the authenticate type to contact cluster orchestrator
+	UserName           string
+	Password           string
+	APIToken           string // session token to access objects
+}
+
+// DummyOrchestratorConfig holds the config to contact dummy server
+type DummyOrchestratorConfig struct {
 	Server             string             // address of the cluster orchestration server
 	Port               string             // to contact on cluster orchestration server
 	AuthenticationType AuthenticationType // denotes the authenticate type to contact cluster orchestrator

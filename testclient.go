@@ -24,12 +24,14 @@ func main() {
 		log.Errorf("exception while initializing Rancher Client. %v", err)
 	}
 	startTime := time.Now()
-	if err := rancherClient.Login(); err != nil {
+	if _, err := rancherClient.Login(); err != nil {
 		log.Errorf("exception while authenticaing Rancher Client. %v", err)
+		return
 	}
 
 	if err := rancherClient.VerifyTokenValidity(); err != nil {
 		log.Errorf("exception while verifying Rancher Client token. %v", err)
+		return
 	}
 
 	clusterName := "adarsh-test-cluster"
@@ -40,6 +42,10 @@ func main() {
 
 	if _, err := rancherClient.GetClusterStatusByID(clusterConfig.ID); err != nil {
 		log.Errorf("exception while fetching Rancher Cluster status. %v", err)
+	}
+
+	if _, err := rancherClient.ListClusterStatuses(); err != nil {
+		log.Errorf("exception while fetching Rancher Cluster status list. %v", err)
 	}
 
 	if err := rancherClient.DeleteCluster(clusterConfig.ID); err != nil {

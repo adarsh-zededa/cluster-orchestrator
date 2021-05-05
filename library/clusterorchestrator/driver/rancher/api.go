@@ -131,7 +131,7 @@ func (ac *apiClient) createCluster(clusterName string) (*client.Cluster, error) 
 		},
 		Name: clusterName,
 	}
-	clusterCreateURL := fmt.Sprintf(CLUSTER_CREATE_URL_TEMPLATE,
+	clusterCreateURL := fmt.Sprintf(CLUSTER_BASE_URL_TEMPLATE,
 		fmt.Sprintf("%s:%s", ac.Server, ac.Port))
 	clusterCreateResponse := &client.Cluster{}
 
@@ -173,6 +173,32 @@ func (ac *apiClient) getClusterByID(clusterID string) (*client.Cluster, error) {
 			GET, clusterStatusURL, err)
 	}
 	return clusterStatusResponse, nil
+}
+
+func (ac *apiClient) getClusterList() (*client.ClusterCollection, error) {
+	clusterListURL := fmt.Sprintf(CLUSTER_BASE_URL_TEMPLATE,
+		fmt.Sprintf("%s:%s", ac.Server, ac.Port))
+	clusterListResponse := &client.ClusterCollection{}
+
+	if err := ac.fireRancherAPI(GET, clusterListURL, nil, clusterListResponse,
+		http.StatusOK); err != nil {
+		return nil, fmt.Errorf("rancher list cluster error. METHOD %s, URL: %s, Error: %v",
+			GET, clusterListURL, err)
+	}
+	return clusterListResponse, nil
+}
+
+func (ac *apiClient) getNodesList() (*client.NodeCollection, error) {
+	nodeListURL := fmt.Sprintf(NODE_BASE_URL_TEMPLATE,
+		fmt.Sprintf("%s:%s", ac.Server, ac.Port))
+	nodeListResponse := &client.NodeCollection{}
+
+	if err := ac.fireRancherAPI(GET, nodeListURL, nil, nodeListResponse,
+		http.StatusOK); err != nil {
+		return nil, fmt.Errorf("rancher list nodes error. METHOD %s, URL: %s, Error: %v",
+			GET, nodeListURL, err)
+	}
+	return nodeListResponse, nil
 }
 
 func (ac *apiClient) getClusterNodesByID(clusterID string) (*client.NodeCollection, error) {
