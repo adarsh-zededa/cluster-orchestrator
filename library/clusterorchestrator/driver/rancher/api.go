@@ -9,11 +9,22 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rancher/norman/types"
-	apis "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
-	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	log "github.com/sirupsen/logrus"
 )
+
+type APIClient interface {
+	fireRancherAPI(string, string, interface{}, interface{}, int) error
+	loginWithCredentials() (*Token, error)
+	verifyToken() error
+	createCluster(string) (*Cluster, error)
+	clusterRegister(string) (*ClusterRegistrationToken, error)
+	getClusterByID(string) (*Cluster, error)
+	getClusterList() (*ClusterCollection, error)
+	getNodesList() (*NodeCollection, error)
+	getClusterNodesByID(string) (*NodeCollection, error)
+	deleteClusterByID(string) error
+	getAPIToken() string
+}
 
 type apiClient struct {
 	Server   string // address of the cluster orchestration server
@@ -91,22 +102,23 @@ func (ac *apiClient) fireRancherAPI(method, url string, requestObject interface{
 	}
 	return nil
 }
-func (ac *apiClient) loginWithCredentials() (*client.Token, error) {
-	loginRequestBody := apis.BasicLogin{
+func (ac *apiClient) loginWithCredentials() (*Token, error) {
+	loginRequestBody := BasicLogin{
 		Username: ac.UserName,
 		Password: ac.Password,
-		GenericLogin: apis.GenericLogin{
+		GenericLogin: GenericLogin{
 			TTLMillis:   DEFAULT_TOKEN_TTL_MILLISECOND,
 			Description: "ZedControl API session",
 		},
 	}
 	loginURL := fmt.Sprintf(LOGIN_URL_TEMPLATE, fmt.Sprintf("%s:%s", ac.Server, ac.Port))
-	loginResponse := &client.Token{}
+	loginResponse := &Token{}
 
 	if err := ac.fireRancherAPI(POST, loginURL, loginRequestBody, loginResponse, http.StatusCreated);
 		err != nil {
 		return nil, fmt.Errorf("rancher login error. METHOD %s, URL: %s. Error: %v", POST, loginURL, err)
 	}
+	ac.APIToken = loginResponse.Token
 	return loginResponse, nil
 }
 
@@ -123,17 +135,17 @@ func (ac *apiClient) verifyToken() error {
 	return nil
 }
 
-func (ac *apiClient) createCluster(clusterName string) (*client.Cluster, error) {
-	clusterCreateRequest := client.Cluster{
+func (ac *apiClient) createCluster(clusterName string) (*Cluster, error) {
+	clusterCreateRequest := Cluster{
 		DockerRootDir: "/var/lib/docker",
-		Resource: types.Resource{
+		Resource: Resource{
 			Type: "cluster",
 		},
 		Name: clusterName,
 	}
 	clusterCreateURL := fmt.Sprintf(CLUSTER_BASE_URL_TEMPLATE,
 		fmt.Sprintf("%s:%s", ac.Server, ac.Port))
-	clusterCreateResponse := &client.Cluster{}
+	clusterCreateResponse := &Cluster{}
 
 	if err := ac.fireRancherAPI(POST, clusterCreateURL, clusterCreateRequest,
 		clusterCreateResponse, http.StatusCreated); err != nil {
@@ -143,16 +155,16 @@ func (ac *apiClient) createCluster(clusterName string) (*client.Cluster, error) 
 	return clusterCreateResponse, nil
 }
 
-func (ac *apiClient) clusterRegister(clusterID string) (*client.ClusterRegistrationToken, error) {
-	clusterRegisterRequest := client.ClusterRegistrationToken{
-		Resource: types.Resource{
+func (ac *apiClient) clusterRegister(clusterID string) (*ClusterRegistrationToken, error) {
+	clusterRegisterRequest := ClusterRegistrationToken{
+		Resource: Resource{
 			Type: "clusterRegistrationToken",
 		},
 		ClusterID: clusterID,
 	}
 	clusterRegisterURL := fmt.Sprintf(CLUSTER_REGISTER_URL_TEMPLATE,
 		fmt.Sprintf("%s:%s", ac.Server, ac.Port))
-	clusterRegisterResponse := &client.ClusterRegistrationToken{}
+	clusterRegisterResponse := &ClusterRegistrationToken{}
 
 	if err := ac.fireRancherAPI(POST, clusterRegisterURL, clusterRegisterRequest,
 		clusterRegisterResponse, http.StatusCreated); err != nil {
@@ -162,10 +174,10 @@ func (ac *apiClient) clusterRegister(clusterID string) (*client.ClusterRegistrat
 	return clusterRegisterResponse, nil
 }
 
-func (ac *apiClient) getClusterByID(clusterID string) (*client.Cluster, error) {
+func (ac *apiClient) getClusterByID(clusterID string) (*Cluster, error) {
 	clusterStatusURL := fmt.Sprintf(CLUSTER_BY_ID_URL_TEMPLATE,
 		fmt.Sprintf("%s:%s", ac.Server, ac.Port), clusterID)
-	clusterStatusResponse := &client.Cluster{}
+	clusterStatusResponse := &Cluster{}
 
 	if err := ac.fireRancherAPI(GET, clusterStatusURL, nil, clusterStatusResponse,
 		http.StatusOK); err != nil {
@@ -175,10 +187,10 @@ func (ac *apiClient) getClusterByID(clusterID string) (*client.Cluster, error) {
 	return clusterStatusResponse, nil
 }
 
-func (ac *apiClient) getClusterList() (*client.ClusterCollection, error) {
+func (ac *apiClient) getClusterList() (*ClusterCollection, error) {
 	clusterListURL := fmt.Sprintf(CLUSTER_BASE_URL_TEMPLATE,
 		fmt.Sprintf("%s:%s", ac.Server, ac.Port))
-	clusterListResponse := &client.ClusterCollection{}
+	clusterListResponse := &ClusterCollection{}
 
 	if err := ac.fireRancherAPI(GET, clusterListURL, nil, clusterListResponse,
 		http.StatusOK); err != nil {
@@ -188,10 +200,10 @@ func (ac *apiClient) getClusterList() (*client.ClusterCollection, error) {
 	return clusterListResponse, nil
 }
 
-func (ac *apiClient) getNodesList() (*client.NodeCollection, error) {
+func (ac *apiClient) getNodesList() (*NodeCollection, error) {
 	nodeListURL := fmt.Sprintf(NODE_BASE_URL_TEMPLATE,
 		fmt.Sprintf("%s:%s", ac.Server, ac.Port))
-	nodeListResponse := &client.NodeCollection{}
+	nodeListResponse := &NodeCollection{}
 
 	if err := ac.fireRancherAPI(GET, nodeListURL, nil, nodeListResponse,
 		http.StatusOK); err != nil {
@@ -201,10 +213,10 @@ func (ac *apiClient) getNodesList() (*client.NodeCollection, error) {
 	return nodeListResponse, nil
 }
 
-func (ac *apiClient) getClusterNodesByID(clusterID string) (*client.NodeCollection, error) {
+func (ac *apiClient) getClusterNodesByID(clusterID string) (*NodeCollection, error) {
 	clusterNodesURL := fmt.Sprintf(CLUSTER_NODES_LIST_URL_TEMPLATE,
 		fmt.Sprintf("%s:%s", ac.Server, ac.Port), clusterID)
-	clusterNodesListResponse := &client.NodeCollection{}
+	clusterNodesListResponse := &NodeCollection{}
 
 	if err := ac.fireRancherAPI(GET, clusterNodesURL, nil, clusterNodesListResponse,
 		http.StatusOK); err != nil {
@@ -223,6 +235,10 @@ func (ac *apiClient) deleteClusterByID(clusterID string) error {
 			DELETE, clusterDeleteURL, err)
 	}
 	return nil
+}
+
+func (ac *apiClient) getAPIToken() string {
+	return ac.APIToken
 }
 
 // newAPIClient creates a new API client

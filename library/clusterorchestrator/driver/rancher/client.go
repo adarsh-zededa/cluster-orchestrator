@@ -5,14 +5,13 @@ import (
 	"strconv"
 
 	"github.com/adarsh-zededa/cluster-orchestrator/library/clusterorchestrator/ops"
-	client "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	log "github.com/sirupsen/logrus"
 )
 
 func NewRancherClient(rancherConfig *ops.RancherOrchestratorConfig) ops.OrchestratorClient {
 	rancherClient := &Client{
 		AuthenticationType: rancherConfig.AuthenticationType,
-		rancherAPIClient: apiClient{
+		rancherAPIClient: &apiClient{
 			Server:   rancherConfig.Server,
 			Port:     rancherConfig.Port,
 			UserName: rancherConfig.UserName,
@@ -24,12 +23,11 @@ func NewRancherClient(rancherConfig *ops.RancherOrchestratorConfig) ops.Orchestr
 }
 
 func (rc *Client) Login() (string, error) {
-	loginResponse, err := rc.rancherAPIClient.loginWithCredentials()
+	_, err := rc.rancherAPIClient.loginWithCredentials()
 	if err != nil {
 		return "", fmt.Errorf("rancher Login failed. %v", err)
 	}
-	rc.rancherAPIClient.APIToken = loginResponse.Token
-	return rc.rancherAPIClient.APIToken, nil
+	return rc.rancherAPIClient.getAPIToken(), nil
 }
 
 func (rc *Client) VerifyTokenValidity() error {
@@ -173,7 +171,7 @@ func getMemoryInBytes(memory string) (int64, error) {
 	return int64(value * multiplicationValue), nil
 }
 
-func parseClusterSummary(clusterSummary *client.Cluster, clusterNodes []*ops.Node) (*ops.ClusterStatus, error) {
+func parseClusterSummary(clusterSummary *Cluster, clusterNodes []*ops.Node) (*ops.ClusterStatus, error) {
 	totalCPUs, err := strconv.Atoi(clusterSummary.Allocatable[ResourceCPU])
 	if err != nil {
 		return nil, fmt.Errorf("exception while parsing cluster total CPU. %v", err)
@@ -234,7 +232,7 @@ func parseClusterSummary(clusterSummary *client.Cluster, clusterNodes []*ops.Nod
 	}
 	return clusterStatus, nil
 }
-func parseNodeSummary(nodeSummary client.Node) (*ops.Node, error) {
+func parseNodeSummary(nodeSummary Node) (*ops.Node, error) {
 	totalCPUs, err := strconv.Atoi(nodeSummary.Allocatable[ResourceCPU])
 	if err != nil {
 		return nil, fmt.Errorf("exception while parsing node total CPU. %v", err)

@@ -12,11 +12,11 @@ func main() {
 	orchestratorConfig := ops.OrchestratorConfig{
 		Type: ops.ORCHESTRATOR_TYPE_RANCHER,
 		Rancher: &ops.RancherOrchestratorConfig{
-			Server:             "<server-address>",
-			Port:               "<server-port>",
+			Server:             "40.114.78.211",
+			Port:               "443",
 			AuthenticationType: ops.AUTHENTICATION_CREDENTIAL,
-			UserName:           "<username>",
-			Password:           "<password>",
+			UserName:           "admin",
+			Password:           "k3sAdmin@1234",
 		},
 	}
 	rancherClient, err := clusterorchestrator.NewClient(orchestratorConfig)
@@ -40,7 +40,7 @@ func main() {
 		log.Errorf("exception while verifying creating cluster. %v", err)
 	}
 
-	if _, err := rancherClient.GetClusterStatusByID(clusterConfig.ID); err != nil {
+	if _, err := rancherClient.GetClusterStatusByID("c-rwm2j"); err != nil {
 		log.Errorf("exception while fetching Rancher Cluster status. %v", err)
 	}
 

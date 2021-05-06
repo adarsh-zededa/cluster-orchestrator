@@ -47,5 +47,5 @@ const (
 // Client object used to interact with rancher server
 type Client struct {
 	AuthenticationType ops.AuthenticationType // denotes the authenticate type to contact cluster orchestrator
-	rancherAPIClient   apiClient
+	rancherAPIClient   APIClient
 }
