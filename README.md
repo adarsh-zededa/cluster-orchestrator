@@ -8,6 +8,7 @@ Login() error
 VerifyTokenValidity() error
 CreateCluster(clusterName string) (*ClusterConfig, error)
 GetClusterStatusByID(clusterID string) (*ClusterStatus, error)
+ListClusterStatuses() ([]*ClusterStatus, error)
 DeleteCluster(clusterID string) error
 ```
 Refer `./testclient.go` on how to create and interact with the orchestrator client
