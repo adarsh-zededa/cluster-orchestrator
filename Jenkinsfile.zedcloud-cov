@@ -1,0 +1,51 @@
+pipeline {
+  agent {
+    label 'zedcloud'
+  }
+  environment {
+    GOPATH="${WORKSPACE}/gosrc"
+    ZEDPATH="${GOPATH}/src/github.com/zededa/zedcloud"
+    PATH="${GOPATH}/bin:${PATH}"
+    ARTIFACTDIR="${WORKSPACE}/tmp"
+    YETUS_SRCDIR="yetus-src"
+    BRANCH_NAME="main"
+  }
+
+  stages {
+    stage('Checkout jenkins-library') {
+      steps {
+        library identifier: "zededa@main",
+                retriever: modernSCM(
+                          [$class: 'GitSCMSource',
+                           remote: 'https://github.com/zededa/jenkins-library.git',
+                           credentialsId: 'github-build-at-zededa.net'])
+      }
+    }
+
+    stage ('Checkout ZedCloud') {
+      steps {
+        script {
+          // CHANGE_BRANCH is only set if this is a PR.
+          // BRANCH_NAME is set to the PR# during a PR, the actual
+          // branch otherwise
+          if (env.CHANGE_BRANCH) {
+            checkoutZedcloud(zedcloudBranch: env.CHANGE_BRANCH,
+                             zedcloudDir: "${ZEDPATH}",
+                             artifactDir: "${ARTIFACTDIR}")
+            checkoutZedcloud(zedcloudBranch: env.CHANGE_BRANCH,
+                             zedcloudDir: "${YETUS_SRCDIR}",
+                             artifactDir: "${ARTIFACTDIR}")
+          } else {
+            checkoutZedcloud(zedcloudBranch: env.BRANCH_NAME,
+                             zedcloudDir: "${ZEDPATH}",
+                             artifactDir: "${ARTIFACTDIR}")
+            checkoutZedcloud(zedcloudBranch: env.BRANCH_NAME,
+                             zedcloudDir: "${YETUS_SRCDIR}",
+                             artifactDir: "${ARTIFACTDIR}")
+          }
+
+        }
+      }
+    }
+  }
+}
