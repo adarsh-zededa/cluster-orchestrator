@@ -1,7 +1,6 @@
 pipeline {
-  agent {
-    label 'zedcloud'
-  }
+  agent any
+
   environment {
     GOPATH="${WORKSPACE}/gosrc"
     ZEDPATH="${GOPATH}/src/github.com/zededa/zedcloud"
