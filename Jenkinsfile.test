@@ -16,7 +16,7 @@ pipeline {
         library identifier: "zededa@main",
                 retriever: modernSCM(
                           [$class: 'GitSCMSource',
-                           remote: 'https://github.com/zededa/jenkins-library.git',
+                           remote: 'https://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@github.com/zededa/jenkins-library.git',
                            credentialsId: 'github-build-at-zededa.net'])
       }
     }
