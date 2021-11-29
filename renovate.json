@@ -1,5 +1,10 @@
 {
   "extends": [
     "config:base"
-  ]
+  ],
+  "baseBranches": ["main"],
+  "commitBodyTable": true,
+  "enabled": true,
+  "rollbackPrs": true,
+  "reviewers": ["adarsh-zededa"]
 }
